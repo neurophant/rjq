@@ -2,7 +2,8 @@
 
 Simple redis job queue
 
-![https://travis-ci.org/embali/rjq](https://travis-ci.org/embali/rjq.svg?branch=master)
+[![crates.io](https://img.shields.io/crates/v/rjq.svg)](https://crates.io/crates/rjq)
+[![Build Status](https://travis-ci.org/embali/rjq.svg?branch=master)](https://travis-ci.org/embali/rjq)
 
 
 ## Enqueue jobs
