@@ -34,12 +34,7 @@ struct Job {
 }
 
 
-trait Jobs {
-    fn new(args: Vec<String>) -> Job;
-}
-
-
-impl Jobs for Job {
+impl Job {
     fn new(args: Vec<String>) -> Job {
         Job {
             uuid: Uuid::new_v4().to_string(),
@@ -57,34 +52,15 @@ pub struct Queue {
 }
 
 
-pub trait Queues {
-    fn new(url: &str, name: &str) -> Queue;
-    fn drop(&self) -> Result<(), Box<Error>>;
-    fn enqueue(&self, args: Vec<String>, expire: usize) -> Result<String, Box<Error>>;
-    fn status(&self, uuid: &str) -> Result<Status, Box<Error>>;
-    fn work<F: Fn(String, Vec<String>) -> Result<String, Box<Error>> + Send + Sync + 'static>
-        (&self,
-         wait: usize,
-         fun: F,
-         timeout: usize,
-         freq: usize,
-         expire: usize,
-         fall: bool,
-         infinite: bool)
-         -> Result<(), Box<Error>>;
-    fn result(&self, uuid: &str) -> Result<String, Box<Error>>;
-}
-
-
-impl Queues for Queue {
-    fn new(url: &str, name: &str) -> Queue {
+impl Queue {
+    pub fn new(url: &str, name: &str) -> Queue {
         Queue {
             url: url.to_string(),
             name: name.to_string(),
         }
     }
 
-    fn drop(&self) -> Result<(), Box<Error>> {
+    pub fn drop(&self) -> Result<(), Box<Error>> {
         let client = try!(Client::open(self.url.as_str()));
         let conn = try!(client.get_connection());
 
@@ -93,7 +69,7 @@ impl Queues for Queue {
         Ok(())
     }
 
-    fn enqueue(&self, args: Vec<String>, expire: usize) -> Result<String, Box<Error>> {
+    pub fn enqueue(&self, args: Vec<String>, expire: usize) -> Result<String, Box<Error>> {
         let client = try!(Client::open(self.url.as_str()));
         let conn = try!(client.get_connection());
 
@@ -107,7 +83,7 @@ impl Queues for Queue {
         Ok(job.uuid)
     }
 
-    fn status(&self, uuid: &str) -> Result<Status, Box<Error>> {
+    pub fn status(&self, uuid: &str) -> Result<Status, Box<Error>> {
         let client = try!(redis::Client::open(self.url.as_str()));
         let conn = try!(client.get_connection());
 
@@ -117,7 +93,7 @@ impl Queues for Queue {
         Ok(job.status)
     }
 
-    fn work<F: Fn(String, Vec<String>) -> Result<String, Box<Error>> + Send + Sync + 'static>
+    pub fn work<F: Fn(String, Vec<String>) -> Result<String, Box<Error>> + Send + Sync + 'static>
         (&self,
          wait: usize,
          fun: F,
@@ -198,7 +174,7 @@ impl Queues for Queue {
         Ok(())
     }
 
-    fn result(&self, uuid: &str) -> Result<String, Box<Error>> {
+    pub fn result(&self, uuid: &str) -> Result<String, Box<Error>> {
         let client = try!(redis::Client::open(self.url.as_str()));
         let conn = try!(client.get_connection());
 

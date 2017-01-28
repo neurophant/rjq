@@ -5,7 +5,7 @@ Simple redis job queue
 ![https://travis-ci.org/embali/rjq](https://travis-ci.org/embali/rjq.svg?branch=master)
 
 
-## Enqueue jobs and check their statuses and results
+## Enqueue jobs
 
 ```rust
 extern crate rjq;
@@ -13,7 +13,7 @@ extern crate rjq;
 use std::time::Duration;
 use std::thread::sleep;
 
-use rjq::{Queue, Queues, Status};
+use rjq::{Queue, Status};
 
 
 fn main() {
@@ -34,7 +34,7 @@ fn main() {
 ```
 
 
-## Queue worker example
+## Queue worker
 
 ```rust
 extern crate rjq;
@@ -43,7 +43,7 @@ use std::time::Duration;
 use std::thread::sleep;
 use std::error::Error;
 
-use rjq::{Queue, Queues};
+use rjq::Queue;
 
 
 fn main() {
@@ -139,9 +139,9 @@ freq - job status check frequency (times per second)
 
 expire - job result will expire in this time (in seconds)
 
-fall - panic, if job has been lost, to unwind and free resources
+fall - panics to terminate process if the job has been lost
 
-infinite - process jobs infinitely, otherwise only one job will be processed
+infinite - process jobs infinitely one after another, otherwise only one job will be processed
 
 ### Get job result
 

@@ -4,7 +4,7 @@ use std::time::Duration;
 use std::thread::sleep;
 use std::error::Error;
 
-use rjq::{Queue, Queues};
+use rjq::Queue;
 
 
 fn main() {

@@ -6,7 +6,7 @@ use std::time::Duration;
 use std::thread::sleep;
 use std::error::Error;
 
-use rjq::{Status, Queue, Queues};
+use rjq::{Status, Queue};
 
 
 #[test]

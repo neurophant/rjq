@@ -3,7 +3,7 @@ extern crate rjq;
 use std::time::Duration;
 use std::thread::sleep;
 
-use rjq::{Queue, Queues, Status};
+use rjq::{Queue, Status};
 
 
 fn main() {
