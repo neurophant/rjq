@@ -1,0 +1,7 @@
+[package]
+name = "rjq-worker"
+version = "0.1.0"
+authors = ["Anton Smolin"]
+
+[dependencies]
+rjq = { path = "../.." }
