@@ -62,18 +62,18 @@ fn main() {
 
 ## Job status
 
-QUEUED - job queued for further processing
+**QUEUED** - job queued for further processing
 
-RUNNING - job is running by worker
+**RUNNING** - job is running by worker
 
-LOST - job has not been finished in time
+**LOST** - job has not been finished in time
 
-FINISHED - job has been successfully finished
+**FINISHED** - job has been successfully finished
 
-FAILED - job has been failed due to some errors
+**FAILED** - job has been failed due to some errors
 
 
-## Queue functions
+## Queue methods
 
 ### Init queue
 
@@ -81,11 +81,11 @@ FAILED - job has been failed due to some errors
 fn new(url: &str, name: &str) -> Queue;
 ```
 
-url - redis URL
+**url** - redis URL
 
-name - queue name
+**name** - queue name
 
-Returns queue
+Returns **queue**
 
 ### Drop queue jobs
 
@@ -99,11 +99,11 @@ fn drop(&self) -> Result<(), Box<Error>>;
 fn enqueue(&self, args: Vec<String>, expire: usize) -> Result<String, Box<Error>>;
 ```
 
-args - job arguments
+**args** - job arguments
 
-expire - if job has not been started by worker in this time (in seconds), it will expire
+**expire** - if job has not been started by worker in this time (in seconds), it will expire
 
-Returns job UUID
+Returns job **UUID**
 
 ### Get job status
 
@@ -111,9 +111,9 @@ Returns job UUID
 fn status(&self, uuid: &str) -> Result<Status, Box<Error>>;
 ```
 
-uuid - job unique identifier
+**uuid** - job unique identifier
 
-Returns job status
+Returns job **status**
 
 ### Work on queue
 
@@ -130,19 +130,19 @@ fn work<F: Fn(String, Vec<String>) -> Result<String, Box<Error>> + Send + Sync +
      -> Result<(), Box<Error>>;
 ```
 
-wait - time to wait for BLPOP
+**wait** - time to wait until next job will pop
 
-fun - worker function
+**fun** - worker function
 
-timeout - worker function should finish in timeout (in seconds)
+**timeout** - worker function should finish in timeout (in seconds)
 
-freq - job status check frequency (times per second)
+**freq** - job status check frequency (times per second)
 
-expire - job result will expire in this time (in seconds)
+**expire** - job result will expire in this time (in seconds)
 
-fall - panics to terminate process if the job has been lost
+**fall** - panics to terminate process if the job has been lost
 
-infinite - process jobs infinitely one after another, otherwise only one job will be processed
+**infinite** - process jobs infinitely one after another, otherwise only one job will be processed
 
 ### Get job result
 
@@ -150,9 +150,9 @@ infinite - process jobs infinitely one after another, otherwise only one job wil
 fn result(&self, uuid: &str) -> Result<String, Box<Error>>;
 ```
 
-uuid - job unique identifier
+**uuid** - job unique identifier
 
-Returns job result
+Returns job **result**
 
 
 ## Run tests
