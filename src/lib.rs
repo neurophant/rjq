@@ -46,7 +46,7 @@
 //! queue.work(1, process, 5, 10, 30, false, true)?;
 //! ```
 
-//#![deny(missing_docs)]
+#![deny(missing_docs)]
 
 extern crate redis;
 extern crate rustc_serialize;
@@ -62,7 +62,6 @@ use std::sync::Arc;
 use redis::{Commands, Client};
 use rustc_serialize::json::{encode, decode};
 use uuid::Uuid;
-
 
 /// Job status
 #[derive(RustcEncodable, RustcDecodable, Debug, PartialEq)]
@@ -107,6 +106,7 @@ pub struct Queue {
 }
 
 impl Queue {
+    /// Init new queue object
     pub fn new(url: &str, name: &str) -> Queue {
         Queue {
             url: url.to_string(),
@@ -114,6 +114,7 @@ impl Queue {
         }
     }
 
+    /// Delete enqueued jobs
     pub fn drop(&self) -> Result<(), Box<Error>> {
         let client = Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
@@ -123,6 +124,7 @@ impl Queue {
         Ok(())
     }
 
+    /// Enqueue new job
     pub fn enqueue(&self, args: Vec<String>, expire: usize) -> Result<String, Box<Error>> {
         let client = Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
@@ -135,6 +137,7 @@ impl Queue {
         Ok(job.uuid)
     }
 
+    /// Get job status
     pub fn status(&self, uuid: &str) -> Result<Status, Box<Error>> {
         let client = redis::Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
@@ -145,6 +148,7 @@ impl Queue {
         Ok(job.status)
     }
 
+    /// Work on queue, process enqueued jobs
     pub fn work<F: Fn(String, Vec<String>) -> Result<String, Box<Error>> + Send + Sync + 'static>
         (&self,
          wait: usize,
@@ -226,6 +230,7 @@ impl Queue {
         Ok(())
     }
 
+    /// Get job result
     pub fn result(&self, uuid: &str) -> Result<String, Box<Error>> {
         let client = redis::Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
