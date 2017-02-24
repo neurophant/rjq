@@ -5,9 +5,7 @@ extern crate rjq;
 use std::time::Duration;
 use std::thread::sleep;
 use std::error::Error;
-
 use rjq::{Status, Queue};
-
 
 #[test]
 fn test_job_queued() {
@@ -20,7 +18,6 @@ fn test_job_queued() {
     assert!(status == Status::QUEUED);
 }
 
-
 #[test]
 #[should_panic]
 fn test_job_expired() {
@@ -32,7 +29,6 @@ fn test_job_expired() {
 
     queue.status(&uuid).unwrap();
 }
-
 
 #[test]
 fn test_job_finished() {
@@ -51,7 +47,6 @@ fn test_job_finished() {
     assert!(status == Status::FINISHED);
 }
 
-
 #[test]
 fn test_job_result() {
     fn fn_ok(_: String, _: Vec<String>) -> Result<String, Box<Error>> {
@@ -69,7 +64,6 @@ fn test_job_result() {
     assert!(res == "ok");
 }
 
-
 #[test]
 fn test_job_failed() {
     fn fn_err(_: String, _: Vec<String>) -> Result<String, Box<Error>> {
@@ -86,7 +80,6 @@ fn test_job_failed() {
     let status = queue.status(&uuid).unwrap();
     assert!(status == Status::FAILED);
 }
-
 
 #[test]
 fn test_job_lost() {
