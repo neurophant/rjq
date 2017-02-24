@@ -3,9 +3,7 @@ extern crate rjq;
 use std::time::Duration;
 use std::thread::sleep;
 use std::error::Error;
-
 use rjq::Queue;
-
 
 fn main() {
     fn process(uuid: String, _: Vec<String>) -> Result<String, Box<Error>> {

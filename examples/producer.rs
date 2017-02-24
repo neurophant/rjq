@@ -2,9 +2,7 @@ extern crate rjq;
 
 use std::time::Duration;
 use std::thread::sleep;
-
 use rjq::{Queue, Status};
-
 
 fn main() {
     let queue = Queue::new("redis://localhost/", "rjq");

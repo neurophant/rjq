@@ -6,6 +6,11 @@ Simple redis job queue
 [![Build Status](https://travis-ci.org/embali/rjq.svg?branch=master)](https://travis-ci.org/embali/rjq)
 
 
+## Documentation
+
+https://docs.rs/rjq/
+
+
 ## Enqueue jobs
 
 ```rust
@@ -13,9 +18,7 @@ extern crate rjq;
 
 use std::time::Duration;
 use std::thread::sleep;
-
 use rjq::{Queue, Status};
-
 
 fn main() {
     let queue = Queue::new("redis://localhost/", "rjq");
@@ -43,9 +46,7 @@ extern crate rjq;
 use std::time::Duration;
 use std::thread::sleep;
 use std::error::Error;
-
 use rjq::Queue;
-
 
 fn main() {
     fn process(uuid: String, _: Vec<String>) -> Result<String, Box<Error>> {
