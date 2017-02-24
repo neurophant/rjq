@@ -115,34 +115,32 @@ impl Queue {
     }
 
     pub fn drop(&self) -> Result<(), Box<Error>> {
-        let client = try!(Client::open(self.url.as_str()));
-        let conn = try!(client.get_connection());
+        let client = Client::open(self.url.as_str())?;
+        let conn = client.get_connection()?;
 
-        try!(conn.del(format!("{}:uuids", self.name)));
+        conn.del(format!("{}:uuids", self.name))?;
 
         Ok(())
     }
 
     pub fn enqueue(&self, args: Vec<String>, expire: usize) -> Result<String, Box<Error>> {
-        let client = try!(Client::open(self.url.as_str()));
-        let conn = try!(client.get_connection());
+        let client = Client::open(self.url.as_str())?;
+        let conn = client.get_connection()?;
 
         let job = Job::new(args);
 
-        try!(conn.set_ex(format!("{}:{}", self.name, job.uuid),
-                         try!(encode(&job)),
-                         expire));
-        try!(conn.rpush(format!("{}:uuids", self.name), &job.uuid));
+        conn.set_ex(format!("{}:{}", self.name, job.uuid), encode(&job)?, expire)?;
+        conn.rpush(format!("{}:uuids", self.name), &job.uuid)?;
 
         Ok(job.uuid)
     }
 
     pub fn status(&self, uuid: &str) -> Result<Status, Box<Error>> {
-        let client = try!(redis::Client::open(self.url.as_str()));
-        let conn = try!(client.get_connection());
+        let client = redis::Client::open(self.url.as_str())?;
+        let conn = client.get_connection()?;
 
-        let json: String = try!(conn.get(format!("{}:{}", self.name, uuid)));
-        let job: Job = try!(decode(&json));
+        let json: String = conn.get(format!("{}:{}", self.name, uuid))?;
+        let job: Job = decode(&json)?;
 
         Ok(job.status)
     }
@@ -157,13 +155,13 @@ impl Queue {
          fall: bool,
          infinite: bool)
          -> Result<(), Box<Error>> {
-        let client = try!(redis::Client::open(self.url.as_str()));
-        let conn = try!(client.get_connection());
+        let client = redis::Client::open(self.url.as_str())?;
+        let conn = client.get_connection()?;
 
         let a_fun = Arc::new(fun);
         let uuids_key = format!("{}:uuids", self.name);
         loop {
-            let uuids: Vec<String> = try!(conn.blpop(&uuids_key, wait));
+            let uuids: Vec<String> = conn.blpop(&uuids_key, wait)?;
             if uuids.len() < 2 {
                 if !infinite {
                     break;
@@ -182,10 +180,10 @@ impl Queue {
                 continue;
             }
 
-            let mut job: Job = try!(decode(&json));
+            let mut job: Job = decode(&json)?;
 
             job.status = Status::RUNNING;
-            try!(conn.set_ex(&key, try!(encode(&job)), timeout + expire));
+            conn.set_ex(&key, encode(&job)?, timeout + expire)?;
 
             let (tx, rx) = channel();
             let ca_fun = a_fun.clone();
@@ -214,7 +212,7 @@ impl Queue {
             if job.status == Status::RUNNING {
                 job.status = Status::LOST;
             }
-            try!(conn.set_ex(&key, try!(encode(&job)), expire));
+            conn.set_ex(&key, encode(&job)?, expire)?;
 
             if fall && job.status == Status::LOST {
                 panic!("LOST");
@@ -229,11 +227,11 @@ impl Queue {
     }
 
     pub fn result(&self, uuid: &str) -> Result<String, Box<Error>> {
-        let client = try!(redis::Client::open(self.url.as_str()));
-        let conn = try!(client.get_connection());
+        let client = redis::Client::open(self.url.as_str())?;
+        let conn = client.get_connection()?;
 
-        let json: String = try!(conn.get(format!("{}:{}", self.name, uuid)));
-        let job: Job = try!(decode(&json));
+        let json: String = conn.get(format!("{}:{}", self.name, uuid))?;
+        let job: Job = decode(&json)?;
 
         Ok(job.result)
     }
