@@ -97,7 +97,7 @@ impl Job {
     }
 }
 
-/// Queue 
+/// Queue
 pub struct Queue {
     /// Redis url
     url: String,
