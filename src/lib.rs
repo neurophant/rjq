@@ -107,6 +107,10 @@ pub struct Queue {
 
 impl Queue {
     /// Init new queue object
+    ///
+    /// `url` - redis url to connect
+    ///
+    /// `name` - queue name
     pub fn new(url: &str, name: &str) -> Queue {
         Queue {
             url: url.to_string(),
@@ -125,6 +129,13 @@ impl Queue {
     }
 
     /// Enqueue new job
+    ///
+    /// `args` - job arguments
+    ///
+    /// `expire` - job expiration time in seconds, if hasn't started during this time it will be
+    /// removed
+    ///
+    /// Returns unique job identifier
     pub fn enqueue(&self, args: Vec<String>, expire: usize) -> Result<String, Box<Error>> {
         let client = Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
@@ -138,6 +149,10 @@ impl Queue {
     }
 
     /// Get job status
+    ///
+    /// `uuid` - unique job identifier
+    ///
+    /// Returns job status
     pub fn status(&self, uuid: &str) -> Result<Status, Box<Error>> {
         let client = redis::Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
@@ -149,6 +164,22 @@ impl Queue {
     }
 
     /// Work on queue, process enqueued jobs
+    ///
+    /// `wait` - time to wait in single iteration to pop next job, set 1-10 if not sure about that
+    ///
+    /// `fun` - function that would work on jobs
+    ///
+    /// `timeout` - timeout in seconds, if job hasn't been completed during this time, it will be
+    /// marked as lost
+    ///
+    /// `freq` - frequency of checking job status while counting on timeout, number of checks per
+    /// second, recommended values from 1 to 50, if not sure set to 10
+    ///
+    /// `expire` - job result expiration time in seconds
+    ///
+    /// `fall` - if set to true then worker will panic if job was lost
+    ///
+    /// `infinite` - if set to false then worker will process one job and quit
     pub fn work<F: Fn(String, Vec<String>) -> Result<String, Box<Error>> + Send + Sync + 'static>
         (&self,
          wait: usize,
@@ -231,6 +262,10 @@ impl Queue {
     }
 
     /// Get job result
+    ///
+    /// `uuid` - unique job identifier
+    ///
+    /// Returns job result
     pub fn result(&self, uuid: &str) -> Result<String, Box<Error>> {
         let client = redis::Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
