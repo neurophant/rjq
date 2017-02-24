@@ -1,3 +1,53 @@
+//! Redis job queue and worker crate.
+//!
+//! # Enqueue jobs
+//!
+//! ```rust,ignore
+//! extern crate rjq;
+//!
+//! use std::time::Duration;
+//! use std::thread::sleep;
+//! use rjq::{Queue, Status};
+//!
+//! let queue = Queue::new("redis://localhost/", "rjq");
+//! let mut uuids = Vec::new();
+//!
+//! for _ in 0..10 {
+//!     sleep(Duration::from_millis(100));
+//!     uuids.push(queue.enqueue(vec![], 30)?);
+//! }
+//!
+//! sleep(Duration::from_millis(10000));
+//!
+//! for uuid in uuids.iter() {
+//!     let status = queue.status(uuid).unwrap_or(Status::FAILED);
+//!     let result = queue.result(uuid).unwrap_or("".to_string());
+//!     println!("{} {:?} {}", uuid, status, result);
+//! }
+//! ```
+//!
+//! # Work on jobs
+//!
+//! ```rust,ignore
+//! extern crate rjq;
+//!
+//! use std::time::Duration;
+//! use std::thread::sleep;
+//! use std::error::Error;
+//! use rjq::Queue;
+//!
+//! fn process(uuid: String, _: Vec<String>) -> Result<String, Box<Error>> {
+//!     sleep(Duration::from_millis(1000));
+//!     println!("{}", uuid);
+//!     Ok(format!("hi from {}", uuid))
+//! }
+//!
+//! let queue = Queue::new("redis://localhost/", "rjq");
+//! queue.work(1, process, 5, 10, 30, false, true)?;
+//! ```
+
+//#![deny(missing_docs)]
+
 extern crate redis;
 extern crate rustc_serialize;
 extern crate uuid;
@@ -9,21 +59,25 @@ use std::time::Duration;
 use std::thread::sleep;
 use std::marker::{Send, Sync};
 use std::sync::Arc;
-
 use redis::{Commands, Client};
 use rustc_serialize::json::{encode, decode};
 use uuid::Uuid;
 
 
+/// Job status
 #[derive(RustcEncodable, RustcDecodable, Debug, PartialEq)]
 pub enum Status {
+    /// Job is queued
     QUEUED,
+    /// Job is running
     RUNNING,
+    /// Job was lost - timeout exceeded
     LOST,
+    /// Job finished successfully
     FINISHED,
+    /// Job failed
     FAILED,
 }
-
 
 #[derive(RustcEncodable, RustcDecodable, Debug)]
 struct Job {
@@ -32,7 +86,6 @@ struct Job {
     args: Vec<String>,
     result: String,
 }
-
 
 impl Job {
     fn new(args: Vec<String>) -> Job {
@@ -45,12 +98,13 @@ impl Job {
     }
 }
 
-
+/// Queue 
 pub struct Queue {
+    /// Redis url
     url: String,
+    /// Queue name
     name: String,
 }
-
 
 impl Queue {
     pub fn new(url: &str, name: &str) -> Queue {
