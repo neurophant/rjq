@@ -2,7 +2,7 @@ extern crate rjq;
 
 use std::time::Duration;
 use std::thread::sleep;
-use rjq::{Queue, Status};
+use rjq::Queue;
 
 fn main() {
     let queue = Queue::new("redis://localhost/", "rjq");
@@ -16,7 +16,7 @@ fn main() {
     sleep(Duration::from_millis(10000));
 
     for uuid in uuids.iter() {
-        let status = queue.status(uuid).unwrap_or(Status::FAILED);
+        let status = queue.status(uuid).unwrap();
         let result = queue.result(uuid).unwrap().unwrap();
         println!("{} {:?} {}", uuid, status, result);
     }

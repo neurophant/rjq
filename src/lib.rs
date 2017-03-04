@@ -20,8 +20,8 @@
 //! sleep(Duration::from_millis(10000));
 //!
 //! for uuid in uuids.iter() {
-//!     let status = queue.status(uuid).unwrap_or(Status::FAILED);
-//!     let result = queue.result(uuid).unwrap_or("".to_string());
+//!     let status = queue.status(uuid)?;
+//!     let result = queue.result(uuid)?.unwrap();
 //!     println!("{} {:?} {}", uuid, status, result);
 //! }
 //! ```
@@ -193,7 +193,7 @@ impl Queue {
         let client = redis::Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
 
-        let a_fun = Arc::new(fun);
+        let afun = Arc::new(fun);
         let uuids_key = format!("{}:uuids", self.name);
         loop {
             let uuids: Vec<String> = conn.blpop(&uuids_key, wait)?;
@@ -204,16 +204,17 @@ impl Queue {
                 continue;
             }
 
-            let uuid = (&uuids[1]).to_string();
+            let uuid = &uuids[1].to_string();
             let key = format!("{}:{}", self.name, uuid);
-            let json: String = conn.get(&key).unwrap_or("".to_string());
-
-            if json == "" {
-                if !infinite {
-                    break;
+            let json: String = match conn.get(&key) {
+                Ok(o) => o,
+                Err(_) => {
+                    if !infinite {
+                        break;
+                    }
+                    continue;
                 }
-                continue;
-            }
+            };
 
             let mut job: Job = decode(&json)?;
 
@@ -221,14 +222,15 @@ impl Queue {
             conn.set_ex(&key, encode(&job)?, timeout + expire)?;
 
             let (tx, rx) = channel();
-            let ca_fun = a_fun.clone();
+            let cafun = afun.clone();
             let cuuid = uuid.clone();
             let cargs = job.args.clone();
             thread::spawn(move || {
-                match ca_fun(cuuid, cargs) {
-                    Ok(res) => tx.send((Status::FINISHED, Some(res))).unwrap_or(()),
-                    Err(_) => tx.send((Status::FAILED, None)).unwrap_or(())
-                }
+                let r = match cafun(cuuid, cargs) {
+                    Ok(o) => (Status::FINISHED, Some(o)),
+                    Err(_) => (Status::FAILED, None)
+                };
+                tx.send(r).unwrap_or(())
             });
 
             for _ in 0..(timeout * freq) {
