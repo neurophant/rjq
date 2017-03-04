@@ -83,7 +83,7 @@ struct Job {
     uuid: String,
     status: Status,
     args: Vec<String>,
-    result: String,
+    result: Option<String>,
 }
 
 impl Job {
@@ -92,7 +92,7 @@ impl Job {
             uuid: Uuid::new_v4().to_string(),
             status: Status::QUEUED,
             args: args,
-            result: "".to_string(),
+            result: None,
         }
     }
 }
@@ -223,20 +223,16 @@ impl Queue {
             let (tx, rx) = channel();
             let ca_fun = a_fun.clone();
             let cuuid = uuid.clone();
-            let args = job.args.clone();
+            let cargs = job.args.clone();
             thread::spawn(move || {
-                match ca_fun(cuuid, args) {
-                    Ok(res) => {
-                        tx.send((Status::FINISHED, res)).unwrap_or(());
-                    }
-                    Err(_) => {
-                        tx.send((Status::FAILED, "".to_string())).unwrap_or(());
-                    }
+                match ca_fun(cuuid, cargs) {
+                    Ok(res) => tx.send((Status::FINISHED, Some(res))).unwrap_or(()),
+                    Err(_) => tx.send((Status::FAILED, None)).unwrap_or(())
                 }
             });
 
             for _ in 0..(timeout * freq) {
-                let (status, result) = rx.try_recv().unwrap_or((Status::RUNNING, "".to_string()));
+                let (status, result) = rx.try_recv().unwrap_or((Status::RUNNING, None));
                 job.status = status;
                 job.result = result;
                 if job.status != Status::RUNNING {
@@ -266,7 +262,7 @@ impl Queue {
     /// `uuid` - unique job identifier
     ///
     /// Returns job result
-    pub fn result(&self, uuid: &str) -> Result<String, Box<Error>> {
+    pub fn result(&self, uuid: &str) -> Result<Option<String>, Box<Error>> {
         let client = redis::Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
 

@@ -60,7 +60,7 @@ fn test_job_result() {
     let uuid = queue.enqueue(vec![], 10).unwrap();
     queue.work(1, fn_ok, 5, 1, 5, false, false).unwrap();
 
-    let res = queue.result(&uuid).unwrap();
+    let res = queue.result(&uuid).unwrap().unwrap();
     assert!(res == "ok");
 }
 

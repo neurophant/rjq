@@ -17,7 +17,7 @@ fn main() {
 
     for uuid in uuids.iter() {
         let status = queue.status(uuid).unwrap_or(Status::FAILED);
-        let result = queue.result(uuid).unwrap_or("".to_string());
+        let result = queue.result(uuid).unwrap().unwrap();
         println!("{} {:?} {}", uuid, status, result);
     }
 }
