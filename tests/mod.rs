@@ -41,7 +41,14 @@ fn test_job_finished() {
     queue.drop().unwrap();
 
     let uuid = queue.enqueue(vec![], 10).unwrap();
-    queue.work(1, fn_ok, 5, 1, 5, false, false).unwrap();
+    queue.work(fn_ok,
+              Some(1),
+              Some(5),
+              Some(1),
+              Some(5),
+              Some(false),
+              Some(false))
+        .unwrap();
 
     let status = queue.status(&uuid).unwrap();
     assert!(status == Status::FINISHED);
@@ -58,7 +65,14 @@ fn test_job_result() {
     queue.drop().unwrap();
 
     let uuid = queue.enqueue(vec![], 10).unwrap();
-    queue.work(1, fn_ok, 5, 1, 5, false, false).unwrap();
+    queue.work(fn_ok,
+              Some(1),
+              Some(5),
+              Some(1),
+              Some(5),
+              Some(false),
+              Some(false))
+        .unwrap();
 
     let res = queue.result(&uuid).unwrap().unwrap();
     assert!(res == "ok");
@@ -75,7 +89,14 @@ fn test_job_failed() {
     queue.drop().unwrap();
 
     let uuid = queue.enqueue(vec![], 10).unwrap();
-    queue.work(1, fn_err, 5, 1, 5, false, false).unwrap();
+    queue.work(fn_err,
+              Some(1),
+              Some(5),
+              Some(1),
+              Some(5),
+              Some(false),
+              Some(false))
+        .unwrap();
 
     let status = queue.status(&uuid).unwrap();
     assert!(status == Status::FAILED);
@@ -92,7 +113,14 @@ fn test_job_lost() {
     queue.drop().unwrap();
 
     let uuid = queue.enqueue(vec![], 10).unwrap();
-    queue.work(1, fn_ok, 5, 1, 5, false, false).unwrap();
+    queue.work(fn_ok,
+              Some(1),
+              Some(5),
+              Some(1),
+              Some(5),
+              Some(false),
+              Some(false))
+        .unwrap();
 
     let status = queue.status(&uuid).unwrap();
     assert!(status == Status::LOST);

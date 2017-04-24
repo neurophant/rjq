@@ -13,5 +13,5 @@ fn main() {
     }
 
     let queue = Queue::new("redis://localhost/", "rjq");
-    queue.work(1, process, 5, 10, 30, false, true).unwrap();
+    queue.work(process, None, Some(5), Some(10), None, Some(false), None).unwrap();
 }

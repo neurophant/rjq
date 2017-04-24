@@ -58,7 +58,7 @@ fn main() {
     }
 
     let queue = Queue::new("redis://localhost/", "rjq");
-    queue.work(1, process, 5, 10, 30, false, true).unwrap();
+    queue.work(process, Some(1), Some(5), Some(10), Some(30), Some(false), None).unwrap();
 }
 ```
 
@@ -123,19 +123,19 @@ Returns job **status**
 ```rust
 fn work<F: Fn(String, Vec<String>) -> Result<String, Box<Error>> + Send + Sync + 'static>
     (&self,
-     wait: usize,
      fun: F,
-     timeout: usize,
-     freq: usize,
-     expire: usize,
-     fall: bool,
-     infinite: bool)
+     wait: Option<usize>,
+     timeout: Option<usize>,
+     freq: Option<usize>,
+     expire: Option<usize>,
+     fall: Option<bool>,
+     infinite: Option<bool>)
      -> Result<(), Box<Error>>;
 ```
 
-**wait** - time to wait until next job will pop
-
 **fun** - worker function
+
+**wait** - time to wait until next job will pop
 
 **timeout** - worker function should finish in timeout (in seconds)
 

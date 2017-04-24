@@ -43,7 +43,7 @@
 //! }
 //!
 //! let queue = Queue::new("redis://localhost/", "rjq");
-//! queue.work(1, process, 5, 10, 30, false, true)?;
+//! queue.work(process, None, Some(60), None, Some(30), Some(false), None)?;
 //! ```
 
 #![deny(missing_docs)]
@@ -169,31 +169,38 @@ impl Queue {
 
     /// Work on queue, process enqueued jobs
     ///
-    /// `wait` - time to wait in single iteration to pop next job, set 1-10 if not sure about that
-    ///
     /// `fun` - function that would work on jobs
     ///
+    /// `wait` - timeout in seconds to wait for one iteration of BLPOP, 10 by default
+    ///
     /// `timeout` - timeout in seconds, if job hasn't been completed during this time, it will be
-    /// marked as lost
+    /// marked as lost, 30 by default
     ///
     /// `freq` - frequency of checking job status while counting on timeout, number of checks per
-    /// second, recommended values from 1 to 50, if not sure set to 10
+    /// second, 1 by default
     ///
-    /// `expire` - job result expiration time in seconds
+    /// `expire` - job result expiration time in seconds, 30 by default
     ///
-    /// `fall` - if set to true then worker will panic if job was lost
+    /// `fall` - panic if job was lost, true by default
     ///
-    /// `infinite` - if set to false then worker will process one job and quit
+    /// `infinite` - process jobs infinitely, true by default
     pub fn work<F: Fn(String, Vec<String>) -> Result<String, Box<Error>> + Send + Sync + 'static>
         (&self,
-         wait: usize,
          fun: F,
-         timeout: usize,
-         freq: usize,
-         expire: usize,
-         fall: bool,
-         infinite: bool)
+         wait: Option<usize>,
+         timeout: Option<usize>,
+         freq: Option<usize>,
+         expire: Option<usize>,
+         fall: Option<bool>,
+         infinite: Option<bool>)
          -> Result<(), Box<Error>> {
+        let wait = wait.unwrap_or(10);
+        let timeout = timeout.unwrap_or(30);
+        let freq = freq.unwrap_or(1);
+        let expire = expire.unwrap_or(30);
+        let fall = fall.unwrap_or(true);
+        let infinite = infinite.unwrap_or(true);
+
         let client = redis::Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
 
