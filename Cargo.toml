@@ -1,6 +1,6 @@
 [package]
 name = "rjq"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Anton Smolin"]
 license = "MIT"
 readme = "README.md"
@@ -16,5 +16,7 @@ travis-ci = { repository = "embali/rjq" }
 
 [dependencies]
 redis = "0.8.0"
-rustc-serialize = "0.3.22"
-uuid = { version = "0.4.0", features = ["v4"] }
+uuid = { version = "0.5.0", features = ["v4"] }
+serde = "1.0.1"
+serde_json = "1.0.0"
+serde_derive = "1.0.1"

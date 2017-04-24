@@ -48,8 +48,11 @@
 
 #![deny(missing_docs)]
 
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
 extern crate redis;
-extern crate rustc_serialize;
 extern crate uuid;
 
 use std::error::Error;
@@ -60,11 +63,10 @@ use std::thread::sleep;
 use std::marker::{Send, Sync};
 use std::sync::Arc;
 use redis::{Commands, Client};
-use rustc_serialize::json::{encode, decode};
 use uuid::Uuid;
 
 /// Job status
-#[derive(RustcEncodable, RustcDecodable, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum Status {
     /// Job is queued
     QUEUED,
@@ -78,7 +80,7 @@ pub enum Status {
     FAILED,
 }
 
-#[derive(RustcEncodable, RustcDecodable, Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Job {
     uuid: String,
     status: Status,
@@ -142,7 +144,7 @@ impl Queue {
 
         let job = Job::new(args);
 
-        conn.set_ex(format!("{}:{}", self.name, job.uuid), encode(&job)?, expire)?;
+        conn.set_ex(format!("{}:{}", self.name, job.uuid), serde_json::to_string(&job)?, expire)?;
         conn.rpush(format!("{}:uuids", self.name), &job.uuid)?;
 
         Ok(job.uuid)
@@ -158,7 +160,7 @@ impl Queue {
         let conn = client.get_connection()?;
 
         let json: String = conn.get(format!("{}:{}", self.name, uuid))?;
-        let job: Job = decode(&json)?;
+        let job: Job = serde_json::from_str(&json)?;
 
         Ok(job.status)
     }
@@ -216,10 +218,10 @@ impl Queue {
                 }
             };
 
-            let mut job: Job = decode(&json)?;
+            let mut job: Job = serde_json::from_str(&json)?;
 
             job.status = Status::RUNNING;
-            conn.set_ex(&key, encode(&job)?, timeout + expire)?;
+            conn.set_ex(&key, serde_json::to_string(&job)?, timeout + expire)?;
 
             let (tx, rx) = channel();
             let cafun = afun.clone();
@@ -245,7 +247,7 @@ impl Queue {
             if job.status == Status::RUNNING {
                 job.status = Status::LOST;
             }
-            conn.set_ex(&key, encode(&job)?, expire)?;
+            conn.set_ex(&key, serde_json::to_string(&job)?, expire)?;
 
             if fall && job.status == Status::LOST {
                 panic!("LOST");
@@ -269,7 +271,7 @@ impl Queue {
         let conn = client.get_connection()?;
 
         let json: String = conn.get(format!("{}:{}", self.name, uuid))?;
-        let job: Job = decode(&json)?;
+        let job: Job = serde_json::from_str(&json)?;
 
         Ok(job.result)
     }
