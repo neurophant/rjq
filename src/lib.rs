@@ -144,7 +144,9 @@ impl Queue {
 
         let job = Job::new(args);
 
-        conn.set_ex(format!("{}:{}", self.name, job.uuid), serde_json::to_string(&job)?, expire)?;
+        conn.set_ex(format!("{}:{}", self.name, job.uuid),
+                    serde_json::to_string(&job)?,
+                    expire)?;
         conn.rpush(format!("{}:uuids", self.name), &job.uuid)?;
 
         Ok(job.uuid)
@@ -230,7 +232,7 @@ impl Queue {
             thread::spawn(move || {
                 let r = match cafun(cuuid, cargs) {
                     Ok(o) => (Status::FINISHED, Some(o)),
-                    Err(_) => (Status::FAILED, None)
+                    Err(_) => (Status::FAILED, None),
                 };
                 tx.send(r).unwrap_or(())
             });
