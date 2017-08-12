@@ -125,7 +125,7 @@ impl Queue {
         let client = Client::open(self.url.as_str())?;
         let conn = client.get_connection()?;
 
-        conn.del(format!("{}:uuids", self.name))?;
+        let _: () = conn.del(format!("{}:uuids", self.name))?;
 
         Ok(())
     }
@@ -144,10 +144,10 @@ impl Queue {
 
         let job = Job::new(args);
 
-        conn.set_ex(format!("{}:{}", self.name, job.uuid),
-                    serde_json::to_string(&job)?,
-                    expire)?;
-        conn.rpush(format!("{}:uuids", self.name), &job.uuid)?;
+        let _: () = conn.set_ex(format!("{}:{}", self.name, job.uuid),
+                                serde_json::to_string(&job)?,
+                                expire)?;
+        let _: () = conn.rpush(format!("{}:uuids", self.name), &job.uuid)?;
 
         Ok(job.uuid)
     }
@@ -230,7 +230,7 @@ impl Queue {
             let mut job: Job = serde_json::from_str(&json)?;
 
             job.status = Status::RUNNING;
-            conn.set_ex(&key, serde_json::to_string(&job)?, timeout + expire)?;
+            let _: () = conn.set_ex(&key, serde_json::to_string(&job)?, timeout + expire)?;
 
             let (tx, rx) = channel();
             let cafun = afun.clone();
@@ -256,7 +256,7 @@ impl Queue {
             if job.status == Status::RUNNING {
                 job.status = Status::LOST;
             }
-            conn.set_ex(&key, serde_json::to_string(&job)?, expire)?;
+            let _: () = conn.set_ex(&key, serde_json::to_string(&job)?, expire)?;
 
             if fall && job.status == Status::LOST {
                 panic!("LOST");
